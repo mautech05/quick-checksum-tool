@@ -1,0 +1,3 @@
+SHA256 hash de D:\Bibliotecas\Descargas\quick-video-fetcher-main\Quick_Video_Fetcher.ahk:
+34ee06e2fce9cc0640b0d9e62ee266e8744f8b585eb257a44f0505e195f7e6f5
+CertUtil: -hashfile comando completado correctamente.
