@@ -1,6 +1,3 @@
-;@Ahk2Exe-SetName Quick Checksum Tool
-;@Ahk2Exe-SetDescription Herramienta de verificación de la integridad de archivos
-;@Ahk2Exe-SetCompanyName MauTech05
 #SingleInstance Force
 #Warn All, Off
 #NoTrayIcon
@@ -10,6 +7,15 @@ global installation_base_dir := A_ScriptDir
 global buttons_dir := installation_base_dir "\buttons"
 global script_icon := buttons_dir "\QuickChecksumTool.ico"
 global home_checksum_path := installation_base_dir "\tmp.txt"
+global U_version := "0.1.1"
+;@Ahk2Exe-SetVersion 0.1.1
+;@Ahk2Exe-SetName Quick Checksum Tool
+;@Ahk2Exe-SetDescription Herramienta de verificación de la integridad de archivos
+;@Ahk2Exe-SetCompanyName MauTech05
+;@Ahk2Exe-SetCopyright MauTech05
+;@Ahk2Exe-SetLanguage 0x080a
+;@Ahk2Exe-ExeName Quick Checksum Tool.exe
+;@Ahk2Exe-SetMainIcon buttons\QuickChecksumTool.ico
 
 ;Configuraciones de la Interfaz de Usuario (GUI)
 OnMessage(0x0201, WM_LBUTTONDOWN)
@@ -28,6 +34,8 @@ global foreign_checksum := ""
 quickCT_GUI.Add("Picture", "x15 y6 w30 h-1", script_icon)
 quickCT_GUI.SetFont("s16 w900 cffffff", "Roboto")
 quickCT_GUI.Add("Text", "x60 y7", "Quick Checksum Tool")
+quickCT_GUI.SetFont("s12 w900 c5f656d", "Roboto")
+quickCT_GUI.Add("Text", "x290 y11", "v" U_version)
 botonMinimizarGUI := quickCT_GUI.Add("Picture", "x405 y10 w15 h-1", buttons_dir "\button.png")
 	botonMinimizarGUI.OnEvent("Click", GuiMinimize)
 botonCerrarGUI := quickCT_GUI.Add("Picture", "x435 y10 w15 h-1", buttons_dir "\button_x.png")
@@ -63,6 +71,8 @@ dropdownChecksumFormat := quickCT_GUI.Add("DropDownList", "xs+150 ys+70 w175", [
 buttonVerifyChecksum:= quickCT_GUI.Add("Picture", "xs ys+110 w416 h-1", buttons_dir "\button_comenzar-verificacion.png")
 	buttonVerifyChecksum.OnEvent("Click", verifyChecksum)
 	buttonVerifyChecksum.Visible := false
+legendWait:= quickCT_GUI.Add("Picture", "xs+160 ys+110 w-1 h22", buttons_dir "\button_espere.png")
+	legendWait.Visible := false
 
 ;Pestaña No.2
 guiTabs.UseTab(2)
@@ -80,6 +90,8 @@ dropdownChecksumFormat2:= quickCT_GUI.Add("DropDownList", "xs+150 ys+35 w175", [
 buttonGenerateChecksum:= quickCT_GUI.Add("Picture", "xs ys+75 w416 h-1", buttons_dir "\button_generar.png")
 	buttonGenerateChecksum.OnEvent("Click", generateChecksum)
 	buttonGenerateChecksum.Visible := false
+legendWait2:= quickCT_GUI.Add("Picture", "xs+160 ys+75 w-1 h22", buttons_dir "\button_espere.png")
+	legendWait2.Visible := false
 
 quickCT_GUI.Show("w465 h272")
 Return
@@ -141,20 +153,28 @@ verifyChecksum(*) {
 		MsgBox "Es necesario rellenar toda la información para continuar", "Quick Checksum Tool", "Iconx"
 		return
 	}
+	buttonVerifyChecksum.Visible := false
+	legendWait.Visible := true
 
 	checksum_command := Format("certutil -hashfile {1}{3}{2} {4} > {1}{5}{2}", '"', '"', home_file, dropdownChecksumFormat.Text, home_checksum_path)
 	RunWait A_ComSpec " /c " checksum_command, , "Hide"
 	home_checksum := StrSplit(FileRead(home_checksum_path), '`n', '`r')
 
-	if (home_checksum[2] == foreign_checksum)
+	if (home_checksum[2] = foreign_checksum)
 		MsgBox "¡Felicidades! Ambos Checksum coincidieron, por lo que el archivo es LEGÍTIMO.", "Quick Checksum Tool", "Iconi"
 	else
 		MsgBox "¡Cuidado! No se detectaron coincidencias en los Checksum, por lo que la integridad del archivo está COMPROMETIDA.", "Quick Checksum Tool", "Icon!"
+	legendWait.Visible := false
+	buttonVerifyChecksum.Visible := true
 }
 generateChecksum(*) {
+	buttonGenerateChecksum.Visible := false
+	legendWait2.Visible := true
 	checksum_command := Format("certutil -hashfile {1}{3}{2} {4} > {1}{5}{2}", '"', '"', home_file, dropdownChecksumFormat2.Text, home_checksum_path)
 	RunWait A_ComSpec " /c " checksum_command, , "Hide"
 	generated_checksum := StrSplit(FileRead(home_checksum_path), '`n', '`r')
 	A_Clipboard := generated_checksum[2]
 	MsgBox "Se ha copiado al portapapeles el Checksum " dropdownChecksumFormat2.Text " correspondiente al archivo seleccionado.", "Quick Checksum Tool", "Iconi"
+	legendWait2.Visible := false
+	buttonGenerateChecksum.Visible := true
 }
